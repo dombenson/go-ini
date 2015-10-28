@@ -4,6 +4,8 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+	"os"
+	"fmt"
 )
 
 func TestLoad(t *testing.T) {
@@ -308,11 +310,39 @@ func TestDefinedSectionBehaviour(t *testing.T) {
 
 func TestWrite(t *testing.T) {
 	testIni := File{
-		"section1": {"option1": "value1", "option2": "value2"},
-		"section2": {"option3": "value3", "option4": "value4"},
+		"section1": makeSection(StringSection{"option1": "value1", "option2": "value2"}),
+		"section2": makeSection(StringSection{"option3": "value3", "option4": "value4"}),
 	}
-	err := WriteFile("test_write.ini", testIni)
+	err := testIni.WriteFile("test_write_out.ini")
 	if err != nil {
-		t.Fatal(err)
+		t.Fatal("Unable to write ini file")
+	}
+	in, err := os.Open("test_write.ini")
+	if err != nil {
+		t.Fatal("Unable to open comparison file")
+	}
+	defer in.Close()
+	out, err := os.Open("test_write_out.ini")
+	if err != nil {
+		t.Fatal("Unable to open comparison file")
+	}
+	defer out.Close()
+	sampleStr := make([]byte, 1024)
+	actualStr := make([]byte, 1024)
+	sourceBytesRead, err := in.Read(sampleStr)
+	if(err != nil) {
+		t.Fatal("Unable to read comparison file")
+	}
+	newBytesRead, err := out.Read(actualStr)
+	if(err != nil) {
+		t.Fatal("Unable to read new file")
+	}
+	if(sourceBytesRead != newBytesRead) {
+		t.Fatal("Written file differs in length from expected")
+	}
+	for curPos, curChar := range sampleStr {
+		if curChar != actualStr[curPos] {
+			t.Error(fmt.Sprintf("Mismatch %q vs %q as char %d", curChar, actualStr[curChar], curPos))
+		}
 	}
 }
