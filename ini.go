@@ -39,7 +39,7 @@ type Section struct {
 type StringSection map[string]string
 type ArraySection map[string][]string
 
-func MakeSection(values StringSection) *Section {
+func makeSection(values StringSection) *Section {
 	return &Section{StringValues: values, ArrayValues: map[string][]string{}}
 }
 
