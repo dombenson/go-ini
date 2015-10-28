@@ -1,11 +1,11 @@
 package ini
 
 import (
+	"fmt"
+	"os"
 	"reflect"
 	"strings"
 	"testing"
-	"os"
-	"fmt"
 )
 
 func TestLoad(t *testing.T) {
@@ -330,14 +330,14 @@ func TestWrite(t *testing.T) {
 	sampleStr := make([]byte, 1024)
 	actualStr := make([]byte, 1024)
 	sourceBytesRead, err := in.Read(sampleStr)
-	if(err != nil) {
+	if err != nil {
 		t.Fatal("Unable to read comparison file")
 	}
 	newBytesRead, err := out.Read(actualStr)
-	if(err != nil) {
+	if err != nil {
 		t.Fatal("Unable to read new file")
 	}
-	if(sourceBytesRead != newBytesRead) {
+	if sourceBytesRead != newBytesRead {
 		t.Fatal("Written file differs in length from expected")
 	}
 	for curPos, curChar := range sampleStr {

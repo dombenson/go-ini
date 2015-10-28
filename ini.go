@@ -7,9 +7,9 @@ import (
 	"io"
 	"os"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
-	"sort"
 )
 
 var (
@@ -213,7 +213,7 @@ func LoadFile(filename string) (File, error) {
 
 // Write out an INI File representing the current state to a writer.
 func (file File) Write(out io.Writer) {
-	orderedSections := make([] string, len(file))
+	orderedSections := make([]string, len(file))
 	counter := 0
 	for section, _ := range file {
 		orderedSections[counter] = section
@@ -223,7 +223,7 @@ func (file File) Write(out io.Writer) {
 	for _, section := range orderedSections {
 		options := file[section]
 		fmt.Fprintln(out, "["+section+"]")
-		orderedStringKeys := make([] string, len(options.StringValues))
+		orderedStringKeys := make([]string, len(options.StringValues))
 		counter = 0
 		for key, _ := range options.StringValues {
 			orderedStringKeys[counter] = key
@@ -233,7 +233,7 @@ func (file File) Write(out io.Writer) {
 		for _, key := range orderedStringKeys {
 			fmt.Fprintln(out, key, "=", options.StringValues[key])
 		}
-		orderedArrayKeys := make([] string, len(options.ArrayValues))
+		orderedArrayKeys := make([]string, len(options.ArrayValues))
 		counter = 0
 		for key, _ := range options.ArrayValues {
 			orderedArrayKeys[counter] = key
