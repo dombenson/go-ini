@@ -59,11 +59,13 @@ func (f File) Get(section, key string) (value string, ok bool) {
 }
 
 // Looks up a value for a key in a section and returns that value, along with a boolean result similar to a map lookup.
+// The `ok` boolean will be false in the event that the value could not be parsed as an int
 func (f File) GetInt(section, key string) (value int, ok bool) {
 	return f.Section(section).GetInt(key)
 }
 
 // Looks up a value for a key in a section and returns that value, along with a boolean result similar to a map lookup.
+// The `ok` boolean will be false in the event that the value could not be parsed as a bool
 func (f File) GetBool(section, key string) (value bool, ok bool) {
 	return f.Section(section).GetBool(key)
 }
@@ -79,7 +81,8 @@ func (s *Section) Get(key string) (value string, ok bool) {
 	return
 }
 
-// Looks up a value for a key in a section and attempts to parse that value as a boolean, along with a boolean result similar to a map lookup.
+// Looks up a value for a key in this section and attempts to parse that value as a boolean, along with a boolean result similar to a map lookup.
+// The `ok` boolean will be false in the event that the value could not be parsed as a bool
 func (s *Section) GetBool(key string) (value bool, ok bool) {
 	rawValue, ok := s.Get(key)
 	if !ok {
@@ -98,7 +101,8 @@ func (s *Section) GetBool(key string) (value bool, ok bool) {
 	return
 }
 
-// Looks up a value for a key in a section and attempts to parse that value as a boolean, along with a boolean result similar to a map lookup.
+// Looks up a value for a key in this section and attempts to parse that value as an integer, along with a boolean result similar to a map lookup.
+// The `ok` boolean will be false in the event that the value could not be parsed as an int
 func (s *Section) GetInt(key string) (value int, ok bool) {
 	rawValue, ok := s.Get(key)
 	if !ok {
