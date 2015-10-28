@@ -36,7 +36,11 @@ type Section struct {
 	ArrayValues  ArraySection
 }
 
+// All ini settings for a section except arrays are stored in this
+// Helper methods like GetInt parse entries in this map
 type StringSection map[string]string
+
+// Used for storing array values for a section
 type ArraySection map[string][]string
 
 func makeSection(values StringSection) *Section {

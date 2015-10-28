@@ -294,14 +294,14 @@ func TestDefinedSectionBehaviour(t *testing.T) {
 	// No sections for an empty file
 	check("", File{})
 	// Default section only if there are actually values for it
-	check("foo=bar", File{"": MakeSection(StringSection{"foo": "bar"})})
+	check("foo=bar", File{"": makeSection(StringSection{"foo": "bar"})})
 	// User-defined sections should always be present, even if empty
 	check("[a]\n[b]\nfoo=bar", File{
-		"a": MakeSection(StringSection{}),
-		"b": MakeSection(StringSection{"foo": "bar"}),
+		"a": makeSection(StringSection{}),
+		"b": makeSection(StringSection{"foo": "bar"}),
 	})
 	check("foo=bar\n[a]\nthis=that", File{
-		"":  MakeSection(StringSection{"foo": "bar"}),
-		"a": MakeSection(StringSection{"this": "that"}),
+		"":  makeSection(StringSection{"foo": "bar"}),
+		"a": makeSection(StringSection{"this": "that"}),
 	})
 }
