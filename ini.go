@@ -7,12 +7,14 @@ import (
 	"io"
 	"os"
 	"regexp"
+	"strconv"
 	"strings"
 )
 
 var (
-	sectionRegex = regexp.MustCompile(`^\[(.*)\]$`)
-	assignRegex  = regexp.MustCompile(`^([^=]+)=(.*)$`)
+	sectionRegex   = regexp.MustCompile(`^\[(.*)\]$`)
+	assignArrRegex = regexp.MustCompile(`^([^=\[\]]+)\[\][^=]*=(.*)$`)
+	assignRegex    = regexp.MustCompile(`^([^=]+)=(.*)$`)
 )
 
 // ErrSyntax is returned when there is a syntax error in an INI file.
@@ -26,16 +28,26 @@ func (e ErrSyntax) Error() string {
 }
 
 // A File represents a parsed INI file.
-type File map[string]Section
+type File map[string]*Section
 
 // A Section represents a single section of an INI file.
-type Section map[string]string
+type Section struct {
+	StringValues StringSection
+	ArrayValues  ArraySection
+}
+
+type StringSection map[string]string
+type ArraySection map[string][]string
+
+func MakeSection(values StringSection) *Section {
+	return &Section{StringValues: values, ArrayValues: map[string][]string{}}
+}
 
 // Returns a named Section. A Section will be created if one does not already exist for the given name.
-func (f File) Section(name string) Section {
+func (f File) Section(name string) *Section {
 	section := f[name]
 	if section == nil {
-		section = make(Section)
+		section = &Section{StringValues: make(map[string]string), ArrayValues: make(map[string][]string)}
 		f[name] = section
 	}
 	return section
@@ -43,9 +55,67 @@ func (f File) Section(name string) Section {
 
 // Looks up a value for a key in a section and returns that value, along with a boolean result similar to a map lookup.
 func (f File) Get(section, key string) (value string, ok bool) {
-	if s := f[section]; s != nil {
-		value, ok = s[key]
+	return f.Section(section).Get(key)
+}
+
+// Looks up a value for a key in a section and returns that value, along with a boolean result similar to a map lookup.
+func (f File) GetInt(section, key string) (value int, ok bool) {
+	return f.Section(section).GetInt(key)
+}
+
+// Looks up a value for a key in a section and returns that value, along with a boolean result similar to a map lookup.
+func (f File) GetBool(section, key string) (value bool, ok bool) {
+	return f.Section(section).GetBool(key)
+}
+
+// Looks up a value for an array key in a section and returns that value, along with a boolean result similar to a map lookup.
+func (f File) GetArr(section, key string) (value []string, ok bool) {
+	return f.Section(section).GetArr(key)
+}
+
+// Looks up a value for a key in a section and returns that value, along with a boolean result similar to a map lookup.
+func (s *Section) Get(key string) (value string, ok bool) {
+	value, ok = s.StringValues[key]
+	return
+}
+
+// Looks up a value for a key in a section and attempts to parse that value as a boolean, along with a boolean result similar to a map lookup.
+func (s *Section) GetBool(key string) (value bool, ok bool) {
+	rawValue, ok := s.Get(key)
+	if !ok {
+		return
 	}
+	ok = true
+	lowerCase := strings.ToLower(rawValue)
+	switch lowerCase {
+	case "", "0", "false", "no":
+		value = false
+	case "1", "true", "yes":
+		value = true
+	default:
+		ok = false
+	}
+	return
+}
+
+// Looks up a value for a key in a section and attempts to parse that value as a boolean, along with a boolean result similar to a map lookup.
+func (s *Section) GetInt(key string) (value int, ok bool) {
+	rawValue, ok := s.Get(key)
+	if !ok {
+		return
+	}
+	ok = false
+	value, err := strconv.Atoi(rawValue)
+	if err != nil {
+		return
+	}
+	ok = true
+	return
+}
+
+// Looks up a value for an array key in a section and returns that value, along with a boolean result similar to a map lookup.
+func (s *Section) GetArr(key string) (value []string, ok bool) {
+	value, ok = s.ArrayValues[key]
 	return
 }
 
@@ -91,10 +161,20 @@ func parseFile(in *bufio.Reader, file File) (err error) {
 			continue
 		}
 
-		if groups := assignRegex.FindStringSubmatch(line); groups != nil {
+		if groups := assignArrRegex.FindStringSubmatch(line); groups != nil {
 			key, val := groups[1], groups[2]
 			key, val = strings.TrimSpace(key), strings.TrimSpace(val)
-			file.Section(section)[key] = val
+			curVal, ok := file.Section(section).ArrayValues[key]
+			if ok {
+				file.Section(section).ArrayValues[key] = append(curVal, val)
+			} else {
+				file.Section(section).ArrayValues[key] = make([]string, 1, 4)
+				file.Section(section).ArrayValues[key][0] = val
+			}
+		} else if groups := assignRegex.FindStringSubmatch(line); groups != nil {
+			key, val := groups[1], groups[2]
+			key, val = strings.TrimSpace(key), strings.TrimSpace(val)
+			file.Section(section).StringValues[key] = val
 		} else if groups := sectionRegex.FindStringSubmatch(line); groups != nil {
 			name := strings.TrimSpace(groups[1])
 			section = name

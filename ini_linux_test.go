@@ -18,7 +18,7 @@ func TestLoadFile(t *testing.T) {
 		t.Error("test.ini not closed")
 	}
 
-	if !reflect.DeepEqual(file, File{"default": {"stuff": "things"}}) {
+	if !reflect.DeepEqual(file, File{"default": MakeSection(StringSection{"stuff": "things"})}) {
 		t.Error("file not read correctly")
 	}
 }

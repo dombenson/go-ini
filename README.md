@@ -16,7 +16,7 @@ import "github.com/vaughan0/go-ini"
 file, err := ini.LoadFile("myfile.ini")
 ```
 
-Get data from the parsed file:
+Get (string) data from the parsed file:
 
 ```go
 name, ok := file.Get("person", "name")
@@ -25,10 +25,19 @@ if !ok {
 }
 ```
 
+Get (array) data from the parsed file:
+
+```go
+colours, ok := file.GetArr("apples", "colour")
+if !ok {
+  panic("'colours' array variable missing from 'apples' section")
+}
+```
+
 Iterate through values in a section:
 
 ```go
-for key, value := range file["mysection"] {
+for key, value := range file["mysection"].StringValues {
   fmt.Printf("%s => %s\n", key, value)
 }
 ```
@@ -48,6 +57,7 @@ INI files are parsed by go-ini line-by-line. Each line may be one of the followi
 
   * A section definition: [section-name]
   * A property: key = value
+  * An array property: key[] = value
   * A comment: #blahblah _or_ ;blahblah
   * Blank. The line will be ignored.
 
@@ -61,7 +71,8 @@ Example:
 ; So am I!
 
 [apples]
-colour = red or green
+colour[] = red
+colour[] = green
 shape = applish
 
 [oranges]
