@@ -212,16 +212,16 @@ func LoadFile(filename string) (File, error) {
 }
 
 // Write out an INI File representing the current state to a writer.
-func (file File) Write(out io.Writer) {
-	orderedSections := make([]string, len(file))
+func (f File) Write(out io.Writer) {
+	orderedSections := make([]string, len(f))
 	counter := 0
-	for section, _ := range file {
+	for section, _ := range f {
 		orderedSections[counter] = section
 		counter++
 	}
 	sort.Strings(orderedSections)
 	for _, section := range orderedSections {
-		options := file[section]
+		options := f[section]
 		fmt.Fprintln(out, "["+section+"]")
 		orderedStringKeys := make([]string, len(options.StringValues))
 		counter = 0
@@ -250,12 +250,12 @@ func (file File) Write(out io.Writer) {
 }
 
 // Write out an INI File representing the current state to a file.
-func (file File) WriteFile(filename string) error {
-	f, err := os.Create(filename)
+func (f File) WriteFile(filename string) error {
+	file, err := os.Create(filename)
 	if err != nil {
 		return err
 	}
-	defer f.Close()
-	file.Write(f)
+	defer file.Close()
+	f.Write(file)
 	return nil
 }
