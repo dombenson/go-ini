@@ -16,6 +16,7 @@ var (
 	sectionRegex   = regexp.MustCompile(`^\[(.*)\]$`)
 	assignArrRegex = regexp.MustCompile(`^([^=\[\]]+)\[\][^=]*=(.*)$`)
 	assignRegex    = regexp.MustCompile(`^([^=]+)=(.*)$`)
+	quotesRegex    = regexp.MustCompile(`^(['"])(.*)(['"])$`)
 )
 
 // ErrSyntax is returned when there is a syntax error in an INI file.
@@ -147,6 +148,17 @@ func (f File) LoadFile(file string) (err error) {
 	return f.Load(in)
 }
 
+func trimWithQuotes(inputVal string) (ret string) {
+	ret = strings.TrimSpace(inputVal)
+	groups := quotesRegex.FindStringSubmatch(ret)
+	if groups != nil {
+		if (groups[1] == groups[3]) {
+			ret = groups[2]
+		}
+	}
+	return
+}
+
 func parseFile(in *bufio.Reader, file File) (err error) {
 	section := ""
 	lineNum := 0
@@ -172,7 +184,7 @@ func parseFile(in *bufio.Reader, file File) (err error) {
 
 		if groups := assignArrRegex.FindStringSubmatch(line); groups != nil {
 			key, val := groups[1], groups[2]
-			key, val = strings.TrimSpace(key), strings.TrimSpace(val)
+			key, val = strings.TrimSpace(key), trimWithQuotes(val)
 			curVal, ok := file.Section(section).ArrayValues[key]
 			if ok {
 				file.Section(section).ArrayValues[key] = append(curVal, val)
@@ -182,7 +194,7 @@ func parseFile(in *bufio.Reader, file File) (err error) {
 			}
 		} else if groups := assignRegex.FindStringSubmatch(line); groups != nil {
 			key, val := groups[1], groups[2]
-			key, val = strings.TrimSpace(key), strings.TrimSpace(val)
+			key, val = strings.TrimSpace(key), trimWithQuotes(val)
 			file.Section(section).StringValues[key] = val
 		} else if groups := sectionRegex.FindStringSubmatch(line); groups != nil {
 			name := strings.TrimSpace(groups[1])
