@@ -293,10 +293,12 @@ func TestDefinedSectionBehaviour(t *testing.T) {
 			t.Errorf("expected %v, got %v", expect, file)
 		}
 	}
+	testFile := File{}
 	// No sections for an empty file
-	check("", File{})
+	check("", testFile)
 	// Default section only if there are actually values for it
-	check("foo=bar", File{"": makeSection(StringSection{"foo": "bar"})})
+	testFile.Set("", "foo","bar")
+	check("foo=bar", testFile)
 	// User-defined sections should always be present, even if empty
 	check("[a]\n[b]\nfoo=bar", File{
 		"a": makeSection(StringSection{}),
@@ -309,10 +311,12 @@ func TestDefinedSectionBehaviour(t *testing.T) {
 }
 
 func TestWrite(t *testing.T) {
-	testIni := File{
-		"section1": makeSection(StringSection{"option1": "value1", "option2": "value2"}),
-		"section2": makeSection(StringSection{"option3": "value3", "option4": "value4"}),
-	}
+	testIni := File{}
+	testIni.Set("section1", "option1", "value1")
+	testIni.Set("section1", "option2", "value2")
+	testIni.Set("section2", "option3", "value3")
+	testIni.Set("section2", "option4", "value4")
+
 	err := testIni.WriteFile("test_write_out.ini")
 	if err != nil {
 		t.Fatal("Unable to write ini file")

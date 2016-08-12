@@ -34,8 +34,8 @@ type File map[string]*Section
 
 // A Section represents a single section of an INI file.
 type Section struct {
-	StringValues StringSection
-	ArrayValues  ArraySection
+	stringValues StringSection
+	arrayValues  ArraySection
 }
 
 // All ini settings for a section except arrays are stored in this
@@ -46,14 +46,14 @@ type StringSection map[string]string
 type ArraySection map[string][]string
 
 func makeSection(values StringSection) *Section {
-	return &Section{StringValues: values, ArrayValues: map[string][]string{}}
+	return &Section{stringValues: values, arrayValues: map[string][]string{}}
 }
 
 // Returns a named Section. A Section will be created if one does not already exist for the given name.
 func (f File) Section(name string) *Section {
 	section := f[name]
 	if section == nil {
-		section = &Section{StringValues: make(map[string]string), ArrayValues: make(map[string][]string)}
+		section = &Section{stringValues: make(map[string]string), arrayValues: make(map[string][]string)}
 		f[name] = section
 	}
 	return section
@@ -64,11 +64,27 @@ func (f File) Get(section, key string) (value string, ok bool) {
 	return f.Section(section).Get(key)
 }
 
+// Set the value for a key in a section, along with a boolean result similar to a map lookup.
+func (f File) Set(section, key string, value string) (ok bool) {
+        return f.Section(section).Set(key, value)
+}
+
+// Set a key in a section to an integer value
+func (f File) SetInt(section, key string, value int) (ok bool) {
+	return f.Section(section).SetInt(key, value)
+}
+
+// Set a key in a section to a boolean value
+func (f File) SetBool(section, key string, value bool) (ok bool) {
+        return f.Section(section).SetBool(key, value)
+}
+
 // Looks up a value for a key in a section and returns that value, along with a boolean result similar to a map lookup.
 // The `ok` boolean will be false in the event that the value could not be parsed as an int
 func (f File) GetInt(section, key string) (value int, ok bool) {
-	return f.Section(section).GetInt(key)
+        return f.Section(section).GetInt(key)
 }
+
 
 // Looks up a value for a key in a section and returns that value, along with a boolean result similar to a map lookup.
 // The `ok` boolean will be false in the event that the value could not be parsed as a bool
@@ -81,9 +97,17 @@ func (f File) GetArr(section, key string) (value []string, ok bool) {
 	return f.Section(section).GetArr(key)
 }
 
+func (s *Section) StringValues() (map[string]string) {
+	return s.stringValues
+}
+
+func (s *Section) ArrayValues() (map[string][]string) {
+        return s.arrayValues
+}
+
 // Looks up a value for a key in a section and returns that value, along with a boolean result similar to a map lookup.
 func (s *Section) Get(key string) (value string, ok bool) {
-	value, ok = s.StringValues[key]
+	value, ok = s.stringValues[key]
 	return
 }
 
@@ -125,8 +149,28 @@ func (s *Section) GetInt(key string) (value int, ok bool) {
 
 // Looks up a value for an array key in a section and returns that value, along with a boolean result similar to a map lookup.
 func (s *Section) GetArr(key string) (value []string, ok bool) {
-	value, ok = s.ArrayValues[key]
+	value, ok = s.arrayValues[key]
 	return
+}
+
+func (s *Section) Set(key string, value string) (ok bool) {
+	s.stringValues[key] = value
+	return true
+}
+
+func (s *Section) SetInt(key string, value int) (ok bool) {
+	ok = s.Set(key, string(value))
+	return
+}
+
+func (s *Section) SetBool(key string, value bool) (ok bool) {
+	var useVal string
+	if(value) {
+		useVal = "true"
+	} else {
+		useVal = "false"
+	}
+	return s.Set(key, useVal)
 }
 
 // Loads INI data from a reader and stores the data in the File.
@@ -185,17 +229,17 @@ func parseFile(in *bufio.Reader, file File) (err error) {
 		if groups := assignArrRegex.FindStringSubmatch(line); groups != nil {
 			key, val := groups[1], groups[2]
 			key, val = strings.TrimSpace(key), trimWithQuotes(val)
-			curVal, ok := file.Section(section).ArrayValues[key]
+			curVal, ok := file.Section(section).arrayValues[key]
 			if ok {
-				file.Section(section).ArrayValues[key] = append(curVal, val)
+				file.Section(section).arrayValues[key] = append(curVal, val)
 			} else {
-				file.Section(section).ArrayValues[key] = make([]string, 1, 4)
-				file.Section(section).ArrayValues[key][0] = val
+				file.Section(section).arrayValues[key] = make([]string, 1, 4)
+				file.Section(section).arrayValues[key][0] = val
 			}
 		} else if groups := assignRegex.FindStringSubmatch(line); groups != nil {
 			key, val := groups[1], groups[2]
 			key, val = strings.TrimSpace(key), trimWithQuotes(val)
-			file.Section(section).StringValues[key] = val
+			file.Section(section).stringValues[key] = val
 		} else if groups := sectionRegex.FindStringSubmatch(line); groups != nil {
 			name := strings.TrimSpace(groups[1])
 			section = name
@@ -235,25 +279,25 @@ func (f File) Write(out io.Writer) {
 	for _, section := range orderedSections {
 		options := f[section]
 		fmt.Fprintln(out, "["+section+"]")
-		orderedStringKeys := make([]string, len(options.StringValues))
+		orderedStringKeys := make([]string, len(options.stringValues))
 		counter = 0
-		for key, _ := range options.StringValues {
+		for key, _ := range options.stringValues {
 			orderedStringKeys[counter] = key
 			counter++
 		}
 		sort.Strings(orderedStringKeys)
 		for _, key := range orderedStringKeys {
-			fmt.Fprintln(out, key, "=", options.StringValues[key])
+			fmt.Fprintln(out, key, "=", options.stringValues[key])
 		}
-		orderedArrayKeys := make([]string, len(options.ArrayValues))
+		orderedArrayKeys := make([]string, len(options.arrayValues))
 		counter = 0
-		for key, _ := range options.ArrayValues {
+		for key, _ := range options.arrayValues {
 			orderedArrayKeys[counter] = key
 			counter++
 		}
 		sort.Strings(orderedArrayKeys)
 		for _, key := range orderedArrayKeys {
-			for _, value := range options.ArrayValues[key] {
+			for _, value := range options.arrayValues[key] {
 				fmt.Fprintln(out, key, "[]=", value)
 			}
 		}

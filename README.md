@@ -37,7 +37,7 @@ if !ok {
 Iterate through values in a section:
 
 ```go
-for key, value := range file["mysection"].StringValues {
+for key, value := range file["mysection"].StringValues() {
   fmt.Printf("%s => %s\n", key, value)
 }
 ```
