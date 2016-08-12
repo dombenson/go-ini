@@ -11,7 +11,7 @@ Usage
 Parse an INI file:
 
 ```go
-import "github.com/vaughan0/go-ini"
+import "github.com/dombenson/go-ini"
 
 file, err := ini.LoadFile("myfile.ini")
 ```
@@ -48,6 +48,18 @@ Iterate through sections in a file:
 for name, section := range file {
   fmt.Printf("Section name: %s\n", name)
 }
+```
+
+Set a value in the file:
+
+```go
+file.Set("person", "name", "fred")
+```
+
+Write a file out:
+
+```go
+file.WriteFile("newfile.ini")
 ```
 
 File Format
