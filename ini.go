@@ -159,7 +159,7 @@ func (s *Section) Set(key string, value string) (ok bool) {
 }
 
 func (s *Section) SetInt(key string, value int) (ok bool) {
-	ok = s.Set(key, string(value))
+	ok = s.Set(key, strconv.Itoa(value))
 	return
 }
 

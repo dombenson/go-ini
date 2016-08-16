@@ -313,7 +313,7 @@ func TestDefinedSectionBehaviour(t *testing.T) {
 func TestWrite(t *testing.T) {
 	testIni := File{}
 	testIni.Set("section1", "option1", "value1")
-	testIni.Set("section1", "option2", "value2")
+	testIni.SetInt("section1", "option2", 2)
 	testIni.Set("section2", "option3", "value3")
 	testIni.Set("section2", "option4", "value4")
 
