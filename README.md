@@ -85,3 +85,13 @@ shape = applish
 shape = square
 colour = blue
 ```
+
+Tests
+-----
+The tests in this package are written to use the subtest feature of Go 1.7. 
+
+Attempting to run the tests with older go will yield a result like 
+```
+./ini_test.go:366: t.Run undefined (type *testing.T has no field or method Run)
+```
+See [https://github.com/mpvl/subtest](https://github.com/mpvl/subtest) if you need to run them on an older release of Go.
