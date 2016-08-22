@@ -28,7 +28,7 @@ func TestLoad(t *testing.T) {
 		t.Fatal(err)
 	}
 	check := func(section, key, expect string) {
-		checkStr(t, &file, section, key, expect)
+		checkStr(t, file, section, key, expect)
 	}
 
 	check("", "herp", "derp")
@@ -37,6 +37,73 @@ func TestLoad(t *testing.T) {
 	check("foo", "multiple", "equals = signs")
 	check("bar", "this", "that")
 }
+
+func TestWriteExtra(t *testing.T) {
+	src := `
+  [foo]
+  hello=world
+  `
+	src2 := `
+	[foo]
+	goodbye=all
+	[bar]
+	other=data
+	`
+
+	expBytes := len(src2)
+	file, err := Load(strings.NewReader(src))
+	if err != nil {
+		t.Skipped()
+	}
+
+	n, err := file.Write([]byte(src2))
+	if(n != expBytes) {
+		t.Errorf("Expected to write %d bytes, got %d", expBytes, n)
+	}
+
+	check := func(section, key, expect string) {
+		checkStr(t, file, section, key, expect)
+	}
+
+	check("foo", "hello", "world")
+	check("foo", "goodbye", "all")
+	check("bar", "other", "data")
+}
+
+func TestWriteExtraInvalid(t *testing.T) {
+	src := `
+  [foo]
+  hello=world
+  `
+	src2 := `
+	[foo]
+	goodbye=all
+	herp?
+	other=data
+	`
+
+	expBytes := 27
+	file, err := Load(strings.NewReader(src))
+	if err != nil {
+		t.Skipped()
+	}
+
+	n, err := file.Write([]byte(src2))
+	if(n != expBytes) {
+		t.Errorf("Expected to write %d bytes, got %d", expBytes, n)
+	}
+	if(err == nil) {
+		t.Errorf("Expected an error on partial write, got none")
+	}
+
+	check := func(section, key, expect string) {
+		checkStr(t, file, section, key, expect)
+	}
+
+	check("foo", "hello", "world")
+	check("foo", "goodbye", "all")
+}
+
 
 func TestBoolFalse(t *testing.T) {
 	src := `
@@ -191,13 +258,13 @@ func TestIntegerInvalid(t *testing.T) {
 	check("baz")
 }
 
-func checkStr(t *testing.T, file *File, section, key, expect string) {
+func checkStr(t *testing.T, file Ini, section, key, expect string) {
 	if value, _ := file.Get(section, key); value != expect {
 		t.Errorf("Get(%q, %q): expected %q, got %q", section, key, expect, value)
 	}
 }
 
-func checkArr(t *testing.T, file *File, section, key string, expect []string) {
+func checkArr(t *testing.T, file Ini, section, key string, expect []string) {
 	value, ok := file.GetArr(section, key)
 	if !ok {
 		t.Errorf("Get(%q, %q): expected value but not found", section, key)
@@ -214,16 +281,16 @@ func checkArr(t *testing.T, file *File, section, key string, expect []string) {
 
 func TestArray(t *testing.T) {
 	var (
-		file File
+		file Ini
 		src  string
 		err  error
 	)
 	check := func(section, key string, expect []string) {
-		checkArr(t, &file, section, key, expect)
+		checkArr(t, file, section, key, expect)
 	}
 
 	checkStr := func(section, key, expect string) {
-		checkStr(t, &file, section, key, expect)
+		checkStr(t, file, section, key, expect)
 	}
 
 	src = `
@@ -293,31 +360,32 @@ func TestDefinedSectionBehaviour(t *testing.T) {
 			t.Errorf("expected %v, got %v", expect, file)
 		}
 	}
-	testFile := File{}
+	testFile := NewFile()
 	// No sections for an empty file
 	check("", testFile)
 	// Default section only if there are actually values for it
 	testFile.Set("", "foo","bar")
 	check("foo=bar", testFile)
 	// User-defined sections should always be present, even if empty
-	check("[a]\n[b]\nfoo=bar", File{
-		"a": makeSection(StringSection{}),
-		"b": makeSection(StringSection{"foo": "bar"}),
-	})
-	check("foo=bar\n[a]\nthis=that", File{
-		"":  makeSection(StringSection{"foo": "bar"}),
-		"a": makeSection(StringSection{"this": "that"}),
-	})
+	check("[a]\n[b]\nfoo=bar", File{sections: map[string]*section{
+		"a": makeSection(stringSection{}),
+		"b": makeSection(stringSection{"foo": "bar"}),
+	}})
+	check("foo=bar\n[a]\nthis=that", File{sections: map[string]*section{
+		"":  makeSection(stringSection{"foo": "bar"}),
+		"a": makeSection(stringSection{"this": "that"}),
+	}})
 }
 
 func TestWrite(t *testing.T) {
-	testIni := File{}
+	testIni := NewFile()
 	testIni.Set("section1", "option1", "value1")
 	testIni.SetInt("section1", "option2", 2)
 	testIni.Set("section2", "option3", "value3")
 	testIni.Set("section2", "option4", "value4")
-
-	err := testIni.WriteFile("test_write_out.ini")
+	fw, err := os.OpenFile("test_write_out.ini", os.O_CREATE|os.O_RDWR, 0600)
+	_, err = testIni.WriteTo(fw)
+	fw.Close()
 	if err != nil {
 		t.Fatal("Unable to write ini file")
 	}
@@ -349,4 +417,11 @@ func TestWrite(t *testing.T) {
 			t.Error(fmt.Sprintf("Mismatch %q vs %q as char %d", curChar, actualStr[curChar], curPos))
 		}
 	}
+}
+
+// This test is an assertion that File does implement ReadWriter
+func TestIsReadWriter(t *testing.T) {
+	var testIni ReadWriter
+	testIni = NewFile()
+	testIni.Set("a","b","c")
 }
