@@ -259,13 +259,13 @@ func TestIntegerInvalid(t *testing.T) {
 	check("baz")
 }
 
-func checkStr(t *testing.T, file Ini, section, key, expect string) {
+func checkStr(t *testing.T, file Reader, section, key, expect string) {
 	if value, _ := file.Get(section, key); value != expect {
 		t.Errorf("Get(%q, %q): expected %q, got %q", section, key, expect, value)
 	}
 }
 
-func checkArr(t *testing.T, file Ini, section, key string, expect []string) {
+func checkArr(t *testing.T, file Reader, section, key string, expect []string) {
 	value, ok := file.GetArr(section, key)
 	if !ok {
 		t.Errorf("Get(%q, %q): expected value but not found", section, key)
@@ -282,7 +282,7 @@ func checkArr(t *testing.T, file Ini, section, key string, expect []string) {
 
 func TestArray(t *testing.T) {
 	var (
-		file Ini
+		file Reader
 		src  string
 		err  error
 	)
