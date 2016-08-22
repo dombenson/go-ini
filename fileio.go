@@ -90,6 +90,8 @@ func (f *File) WriteTo(out io.Writer) (n int64, err error) {
 	return
 }
 
+// Load ini data from the bytestream provided
+// This is provided so that data can be loaded by treating File as an io.Writer
 func (f *File) Write(p []byte) (n int, err error) {
 	reader := strings.NewReader(string(p))
 	var m int64 = 0
@@ -101,6 +103,10 @@ func (f *File) Write(p []byte) (n int, err error) {
 	return
 }
 
+// Write out ini data to the bytestream provided
+// This is provided so that data can be saved by treating File as an io.Reader
+// The returned stream is a consistent representation of the ini file when the read started
+// Call close to start a new read from a freshly serialized file
 func (f *File) Read(p []byte) (n int, err error) {
 	n = 0
 	if(f.reader == nil) {
@@ -115,6 +121,9 @@ func (f *File) Read(p []byte) (n int, err error) {
 	return
 }
 
+// Close a read stream
+// This is semantically a ReaderCloser, in that it does not affect Write
+// After a call to Close() a subsequent Read() will start from the beginning (and reflect any new changes)
 func (f *File) Close() (err error) {
 	err = nil
 	f.reader = nil

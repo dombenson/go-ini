@@ -7,21 +7,22 @@ import (
 )
 
 
-
+// Newfile will create and initialise a File object
 func NewFile() *File {
 	file := File{}
 	file.sections = make(map[string]*section)
 	return &file
 }
 
-// Loads and returns a File from a reader.
+// Load creates a File and populates it with data from a reader.
 func Load(in io.Reader) (*File, error) {
 	file := NewFile()
 	_, err := file.ReadFrom(in)
 	return file, err
 }
 
-// Loads and returns a File from a reader.
+// LoadFile creates a File and populates it with data from a file on disk
+// This is a convenience helper since it is a very common use case
 func LoadFile(filename string) (file *File, err error) {
 	file = nil
 	fh, err := os.Open(filename)

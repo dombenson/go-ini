@@ -3,7 +3,7 @@ package ini
 import "io"
 
 
-// An instance is able to load and extract data from a reader
+// A Reader is able to load and extract data from an io.Reader
 type Reader interface {
 	io.ReaderFrom
 	// Looks up a value for a key in a section and returns that value, along with a boolean result similar to a map lookup.
@@ -18,7 +18,7 @@ type Reader interface {
 	GetArr(section, key string) (value []string, ok bool)
 }
 
-// An instance is able to set and write data to a writer
+// A Writer is able to set and write data to an io.Writer
 type Writer interface {
 	io.WriterTo
 	// Set the value for a key in a section, along with a boolean result similar to a map lookup.
@@ -29,27 +29,27 @@ type Writer interface {
 	SetBool(section, key string, value bool) bool
 }
 
-// An instance is able to load, get, modify and save data
+// A ReadWriter is able to load, get, modify and save data
 type ReadWriter interface {
 	Reader
 	Writer
 }
 
 
-// An instance can additionally accept data by being used as an io.Writer
+// A StreamReader can additionally accept data by being used as an io.Writer
 type StreamReader interface {
 	Reader
 	io.Writer
 
 }
 
-// An instance can additionally be passed as an io.Reader;
+// A StreamWriter can additionally be passed as an io.Reader;
 type StreamWriter interface {
 	Writer
 	io.ReadCloser
 }
 
-
+// A StreamReadWriter can get/set data and be treated as an io.ReadWriteCloser
 type StreamReadWriter interface {
 	StreamReader
 	StreamWriter
