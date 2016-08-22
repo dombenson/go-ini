@@ -6,6 +6,7 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+	"bytes"
 )
 
 func TestLoad(t *testing.T) {
@@ -351,7 +352,7 @@ func TestSyntaxError(t *testing.T) {
 }
 
 func TestDefinedSectionBehaviour(t *testing.T) {
-	check := func(src string, expect File) {
+	check := func(src string, expect *File) {
 		file, err := Load(strings.NewReader(src))
 		if err != nil {
 			t.Fatal(err)
@@ -367,11 +368,11 @@ func TestDefinedSectionBehaviour(t *testing.T) {
 	testFile.Set("", "foo","bar")
 	check("foo=bar", testFile)
 	// User-defined sections should always be present, even if empty
-	check("[a]\n[b]\nfoo=bar", File{sections: map[string]*section{
+	check("[a]\n[b]\nfoo=bar", &File{sections: map[string]*section{
 		"a": makeSection(stringSection{}),
 		"b": makeSection(stringSection{"foo": "bar"}),
 	}})
-	check("foo=bar\n[a]\nthis=that", File{sections: map[string]*section{
+	check("foo=bar\n[a]\nthis=that", &File{sections: map[string]*section{
 		"":  makeSection(stringSection{"foo": "bar"}),
 		"a": makeSection(stringSection{"this": "that"}),
 	}})
@@ -416,6 +417,22 @@ func TestWrite(t *testing.T) {
 		if curChar != actualStr[curPos] {
 			t.Error(fmt.Sprintf("Mismatch %q vs %q as char %d", curChar, actualStr[curChar], curPos))
 		}
+	}
+}
+
+
+func TestRead(t *testing.T) {
+	testIni := NewFile()
+	testIni.Set("section1", "option1", "value1")
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(testIni)
+	strVal := buf.String()
+	expected := `[section1]
+option1 = value1
+
+`
+	if(strVal != expected) {
+		t.Errorf("Incorrect output from read; got: <<<%s<<< expected <<<%s<<<", strVal, expected)
 	}
 }
 

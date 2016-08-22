@@ -24,7 +24,7 @@ func trimWithQuotes(inputVal string) (ret string) {
 	return
 }
 
-func parseFile(in *bufio.Scanner, file File) (bytes int64, err error) {
+func parseFile(in *bufio.Scanner, file *File) (bytes int64, err error) {
 	section := ""
 	lineNum := 0
 	bytes = -1

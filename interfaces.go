@@ -29,7 +29,7 @@ type readerInterface interface {
 }
 type writerInterface interface {
 	io.ReaderFrom
-//	io.Reader
+	io.ReadCloser
 }
 
 type Reader interface {

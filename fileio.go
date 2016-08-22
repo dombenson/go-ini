@@ -8,12 +8,13 @@ import (
 	"fmt"
 	"strings"
 	"errors"
+	"bytes"
 )
 
 
 
 // Loads INI data from a reader and stores the data in the File.
-func (f File) ReadFrom(in io.Reader) (n int64, err error) {
+func (f *File) ReadFrom(in io.Reader) (n int64, err error) {
 	n = 0
 	scanner := bufio.NewScanner(in)
 	n, err = parseFile(scanner, f)
@@ -21,7 +22,7 @@ func (f File) ReadFrom(in io.Reader) (n int64, err error) {
 }
 
 // Loads INI data from a named file and stores the data in the File.
-func (f File) LoadFile(file string) (err error) {
+func (f *File) LoadFile(file string) (err error) {
 	in, err := os.Open(file)
 	if err != nil {
 		return
@@ -33,7 +34,7 @@ func (f File) LoadFile(file string) (err error) {
 
 
 // Write out an INI File representing the current state to a writer.
-func (f File) WriteTo(out io.Writer) (n int64, err error) {
+func (f *File) WriteTo(out io.Writer) (n int64, err error) {
 	orderedSections := make([]string, len(f.sections))
 	counter := 0
 	n = 0
@@ -89,7 +90,7 @@ func (f File) WriteTo(out io.Writer) (n int64, err error) {
 	return
 }
 
-func (f File) Write(p []byte) (n int, err error) {
+func (f *File) Write(p []byte) (n int, err error) {
 	reader := strings.NewReader(string(p))
 	var m int64 = 0
 	m, err = f.ReadFrom(reader)
@@ -100,3 +101,22 @@ func (f File) Write(p []byte) (n int, err error) {
 	return
 }
 
+func (f *File) Read(p []byte) (n int, err error) {
+	n = 0
+	if(f.reader == nil) {
+		buf := new(bytes.Buffer)
+		_, err = f.WriteTo(buf)
+		if (err != nil) {
+			return
+		}
+		f.reader = buf
+	}
+	n, err = f.reader.Read(p)
+	return
+}
+
+func (f *File) Close() (err error) {
+	err = nil
+	f.reader = nil
+	return
+}
