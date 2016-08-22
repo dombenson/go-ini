@@ -3,7 +3,11 @@ go-ini
 
 INI parsing library for Go (golang).
 
-View the API documentation [here](http://godoc.org/github.com/dombenson/go-ini).
+This library supports read/write and implements io.ReadWriteCloser, io.ReadFrom and io.WriteTo for convenience of integration
+
+View the API documentation [here](https://godoc.org/github.com/dombenson/go-ini).
+
+N.B. that the current (v2) of this library is a substantial change from v1 (see https://github.com/vaughan0/go-ini). General usage remains unchanged, but support for direct access to internal structures has been dropped.
 
 Usage
 -----
@@ -34,20 +38,10 @@ if !ok {
 }
 ```
 
-Iterate through values in a section:
+Create a new file for writing:
 
 ```go
-for key, value := range file["mysection"].StringValues() {
-  fmt.Printf("%s => %s\n", key, value)
-}
-```
-
-Iterate through sections in a file:
-
-```go
-for name, section := range file {
-  fmt.Printf("Section name: %s\n", name)
-}
+file := ini.NewFile()
 ```
 
 Set a value in the file:
@@ -59,7 +53,7 @@ file.Set("person", "name", "fred")
 Write a file out:
 
 ```go
-file.WriteFile("newfile.ini")
+file.WriteTo(io.Writer)
 ```
 
 File Format
