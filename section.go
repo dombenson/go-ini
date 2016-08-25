@@ -99,3 +99,14 @@ func (s *section) SetBool(key string, value bool) (ok bool) {
 	}
 	return s.Set(key, useVal)
 }
+
+func (s *section) Remove(key string) {
+	_, found := s.stringValues[key]
+	if(found) {
+		delete(s.stringValues, key)
+	}
+	_, found = s.arrayValues[key]
+	if(found) {
+		delete(s.arrayValues, key)
+	}
+}

@@ -56,3 +56,15 @@ func (f *File) GetBool(section, key string) (value bool, ok bool) {
 func (f *File) GetArr(section, key string) (value []string, ok bool) {
 	return f.section(section).GetArr(key)
 }
+
+func(f *File) Remove(section, key string) {
+	f.section(section).Remove(key)
+}
+
+
+func(f *File) RemoveSection(section string) {
+	_, found := f.sections[section]
+	if(found) {
+		delete(f.sections, section)
+	}
+}

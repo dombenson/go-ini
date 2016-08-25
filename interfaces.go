@@ -27,6 +27,10 @@ type Writer interface {
 	SetInt(section, key string, value int) bool
 	// Set a key in a section to a boolean value
 	SetBool(section, key string, value bool) bool
+	// Remove a key from a section (OK if it does not exist)
+	Remove(section, key string)
+	// RemoveSection removes a whole section from an ini file (OK if it does not exist)
+	RemoveSection(section string)
 }
 
 // A ReadWriter is able to load, get, modify and save data

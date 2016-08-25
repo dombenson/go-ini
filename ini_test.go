@@ -450,3 +450,54 @@ func TestIsReadWriter(t *testing.T) {
 	testIni = NewFile()
 	testIni.Set("a","b","c")
 }
+
+func TestRemove(t *testing.T) {
+	testIni := NewFile()
+	testIni.Set("a","b","c")
+	testIni.Set("d","e","f")
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(testIni)
+	strVal := buf.String()
+	expected := `[a]
+b = c
+
+[d]
+e = f
+
+`
+	testIni.Close()
+	buf.Reset()
+	if(strVal != expected) {
+		t.Errorf("Incorrect output from read; got: <<<%s<<< expected <<<%s<<<", strVal, expected)
+	}
+
+	testIni.Remove("d", "e")
+	buf.ReadFrom(testIni)
+	strVal = buf.String()
+	expected = `[a]
+b = c
+
+[d]
+
+`
+	testIni.Close()
+	buf.Reset()
+	if(strVal != expected) {
+		t.Errorf("Incorrect output from read; got: <<<%s<<< expected <<<%s<<<", strVal, expected)
+	}
+
+	testIni.RemoveSection("d")
+	buf.ReadFrom(testIni)
+	strVal = buf.String()
+	expected = `[a]
+b = c
+
+`
+	testIni.Close()
+	buf.Reset()
+	if(strVal != expected) {
+		t.Errorf("Incorrect output from read; got: <<<%s<<< expected <<<%s<<<", strVal, expected)
+	}
+
+
+}
