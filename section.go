@@ -23,15 +23,6 @@ func makeSection(values stringSection) *section {
 	return &section{stringValues: values, arrayValues: map[string][]string{}}
 }
 
-
-func (s *section) StringValues() (map[string]string) {
-	return s.stringValues
-}
-
-func (s *section) ArrayValues() (map[string][]string) {
-	return s.arrayValues
-}
-
 // Looks up a value for a key in a section and returns that value, along with a boolean result similar to a map lookup.
 func (s *section) Get(key string) (value string, ok bool) {
 	value, ok = s.stringValues[key]
@@ -82,6 +73,11 @@ func (s *section) GetArr(key string) (value []string, ok bool) {
 
 func (s *section) Set(key string, value string) (ok bool) {
 	s.stringValues[key] = value
+	return true
+}
+
+func (s *section) SetArr(key string, value []string) (ok bool) {
+	s.arrayValues[key] = value
 	return true
 }
 

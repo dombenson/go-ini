@@ -16,6 +16,8 @@ type Reader interface {
 	GetBool(section, key string) (value bool, ok bool)
 	// Looks up a value for an array key in a section and returns that value, along with a boolean result similar to a map lookup.
 	GetArr(section, key string) (value []string, ok bool)
+	// Copy loaded data to a writer
+	Copy(Writer)
 }
 
 // A Writer is able to set and write data to an io.Writer
@@ -27,6 +29,8 @@ type Writer interface {
 	SetInt(section, key string, value int) bool
 	// Set a key in a section to a boolean value
 	SetBool(section, key string, value bool) bool
+	// Set a key in a section to a string slice
+	SetArr(section, key string, value []string) bool
 	// Remove a key from a section (OK if it does not exist)
 	Remove(section, key string)
 	// RemoveSection removes a whole section from an ini file (OK if it does not exist)

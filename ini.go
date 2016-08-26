@@ -32,3 +32,10 @@ func LoadFile(filename string) (file *File, err error) {
 	defer fh.Close()
 	return Load(fh)
 }
+
+// Create a file and populate with data from an existing ini.Reader
+func Copy(in Reader) (*File) {
+	file := NewFile()
+	in.Copy(file)
+	return file
+}

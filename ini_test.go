@@ -501,3 +501,56 @@ b = c
 
 
 }
+
+func TestCopy(t *testing.T) {
+	testIni := NewFile()
+	testIni.Set("a","b","c")
+	testIni.Set("d","e","f")
+
+	doesEqual := func(ini Reader, sec, key, expected string) (bool) {
+		act, _ := ini.Get(sec, key)
+		return (act == expected)
+	}
+
+	t.Run("Plain", func(t *testing.T) {
+		destIni := NewFile()
+		testIni.Copy(destIni)
+
+		if (!doesEqual(destIni,"a", "b", "c")) {
+			t.Error("Expected copy to bring in data")
+		}
+	})
+	t.Run("ExtraData", func(t *testing.T) {
+		destIni := NewFile()
+		destIni.Set("a","c","e")
+		testIni.Copy(destIni)
+
+		if (!doesEqual(destIni,"a", "b", "c")) {
+			t.Error("Expected copy to bring in data")
+		}
+		if (!doesEqual(destIni,"a", "c", "e")) {
+			t.Error("Expected copy to leave data")
+		}
+	})
+	t.Run("ExtraSection", func(t *testing.T) {
+		destIni := NewFile()
+		destIni.Set("g","h","i")
+		testIni.Copy(destIni)
+
+		if (!doesEqual(destIni,"a", "b", "c")) {
+			t.Error("Expected copy to bring in data")
+		}
+		if (!doesEqual(destIni,"g", "h", "i")) {
+			t.Error("Expected copy to leave data")
+		}
+	})
+	t.Run("Overwrite", func(t *testing.T) {
+		destIni := NewFile()
+		destIni.Set("a","b","d")
+		testIni.Copy(destIni)
+
+		if (!doesEqual(destIni,"a", "b", "c")) {
+			t.Error("Expected copy to bring in data")
+		}
+	})
+}

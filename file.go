@@ -38,6 +38,10 @@ func (f *File) SetInt(section, key string, value int) (ok bool) {
 func (f *File) SetBool(section, key string, value bool) (ok bool) {
 	return f.section(section).SetBool(key, value)
 }
+// Set a key in a section to an array
+func (f *File) SetArr(section, key string, value []string) (ok bool) {
+	return f.section(section).SetArr(key, value)
+}
 
 // Looks up a value for a key in a section and returns that value, along with a boolean result similar to a map lookup.
 // The `ok` boolean will be false in the event that the value could not be parsed as an int
@@ -66,5 +70,16 @@ func(f *File) RemoveSection(section string) {
 	_, found := f.sections[section]
 	if(found) {
 		delete(f.sections, section)
+	}
+}
+
+func (f *File) Copy(w Writer) {
+	for secName, sec := range f.sections {
+		for keyName, val := range sec.stringValues {
+			w.Set(secName, keyName, val)
+		}
+		for keyName, arVal := range sec.arrayValues {
+			w.SetArr(secName, keyName, arVal)
+		}
 	}
 }
