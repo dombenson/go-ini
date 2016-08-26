@@ -72,3 +72,7 @@ type StreamReadWriter interface {
 	StreamReader
 	StreamWriter
 }
+
+type File interface {
+	StreamReadWriter
+}

@@ -14,7 +14,7 @@ import (
 
 
 // Loads INI data from a reader and stores the data in the File.
-func (f *File) ReadFrom(in io.Reader) (n int64, err error) {
+func (f *file) ReadFrom(in io.Reader) (n int64, err error) {
 	n = 0
 	scanner := bufio.NewScanner(in)
 	n, err = parseFile(scanner, f)
@@ -22,7 +22,7 @@ func (f *File) ReadFrom(in io.Reader) (n int64, err error) {
 }
 
 // Loads INI data from a named file and stores the data in the File.
-func (f *File) LoadFile(file string) (err error) {
+func (f *file) LoadFile(file string) (err error) {
 	in, err := os.Open(file)
 	if err != nil {
 		return
@@ -34,7 +34,7 @@ func (f *File) LoadFile(file string) (err error) {
 
 
 // Write out an INI File representing the current state to a writer.
-func (f *File) WriteTo(out io.Writer) (n int64, err error) {
+func (f *file) WriteTo(out io.Writer) (n int64, err error) {
 	orderedSections := make([]string, len(f.sections))
 	counter := 0
 	n = 0
@@ -92,7 +92,7 @@ func (f *File) WriteTo(out io.Writer) (n int64, err error) {
 
 // Load ini data from the bytestream provided
 // This is provided so that data can be loaded by treating File as an io.Writer
-func (f *File) Write(p []byte) (n int, err error) {
+func (f *file) Write(p []byte) (n int, err error) {
 	reader := strings.NewReader(string(p))
 	var m int64 = 0
 	m, err = f.ReadFrom(reader)
@@ -107,7 +107,7 @@ func (f *File) Write(p []byte) (n int, err error) {
 // This is provided so that data can be saved by treating File as an io.Reader
 // The returned stream is a consistent representation of the ini file when the read started
 // Call close to start a new read from a freshly serialized file
-func (f *File) Read(p []byte) (n int, err error) {
+func (f *file) Read(p []byte) (n int, err error) {
 	n = 0
 	if(f.reader == nil) {
 		buf := new(bytes.Buffer)
@@ -124,7 +124,7 @@ func (f *File) Read(p []byte) (n int, err error) {
 // Close a read stream
 // This is semantically a ReaderCloser, in that it does not affect Write
 // After a call to Close() a subsequent Read() will start from the beginning (and reflect any new changes)
-func (f *File) Close() (err error) {
+func (f *file) Close() (err error) {
 	err = nil
 	f.reader = nil
 	return

@@ -352,7 +352,7 @@ func TestSyntaxError(t *testing.T) {
 }
 
 func TestDefinedSectionBehaviour(t *testing.T) {
-	check := func(src string, expect *File, t *testing.T) {
+	check := func(src string, expect File, t *testing.T) {
 		file, err := Load(strings.NewReader(src))
 		if err != nil {
 			t.Fatal(err)
@@ -373,13 +373,13 @@ func TestDefinedSectionBehaviour(t *testing.T) {
 	})
 	t.Run("emptySection", func(t *testing.T) {
 		// User-defined sections should always be present, even if empty
-		check("[a]\n[b]\nfoo=bar", &File{sections: map[string]*section{
+		check("[a]\n[b]\nfoo=bar", &file{sections: map[string]*section{
 			"a": makeSection(stringSection{}),
 			"b": makeSection(stringSection{"foo": "bar"}),
 		}}, t)
 	})
 	t.Run("mixedGlobalSection", func(t *testing.T) {
-		check("foo=bar\n[a]\nthis=that", &File{sections: map[string]*section{
+		check("foo=bar\n[a]\nthis=that", &file{sections: map[string]*section{
 			"":  makeSection(stringSection{"foo": "bar"}),
 			"a": makeSection(stringSection{"this": "that"}),
 		}}, t)
