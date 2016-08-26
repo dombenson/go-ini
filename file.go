@@ -73,7 +73,7 @@ func(f *File) RemoveSection(section string) {
 	}
 }
 
-func (f *File) Copy(w Writer) {
+func (f *File) Copy(w Setter) {
 	for secName, sec := range f.sections {
 		for keyName, val := range sec.stringValues {
 			w.Set(secName, keyName, val)

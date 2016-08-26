@@ -34,7 +34,7 @@ func LoadFile(filename string) (file *File, err error) {
 }
 
 // Create a file and populate with data from an existing ini.Reader
-func Copy(in Reader) (*File) {
+func Copy(in Copier) (*File) {
 	file := NewFile()
 	in.Copy(file)
 	return file
