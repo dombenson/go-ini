@@ -13,6 +13,10 @@ type Getter interface {
 	GetBool(section, key string) (value bool, ok bool)
 	// Looks up a value for an array key in a section and returns that value, along with a boolean result similar to a map lookup.
 	GetArr(section, key string) (value []string, ok bool)
+	// Lists the sections in the file
+	Sections() (value []string)
+	// Lists the values in a section the file
+	Values(section string) (value map[string]string)
 }
 
 type Copier interface {
@@ -30,6 +34,7 @@ type Setter interface {
 	// Set a key in a section to a string slice
 	SetArr(section, key string, value []string) bool
 }
+
 // A Reader is able to load and extract data from an io.Reader
 type Reader interface {
 	io.ReaderFrom
@@ -53,12 +58,10 @@ type ReadWriter interface {
 	Writer
 }
 
-
 // A StreamReader can additionally accept data by being used as an io.Writer
 type StreamReader interface {
 	Reader
 	io.Writer
-
 }
 
 // A StreamWriter can additionally be passed as an io.Reader;

@@ -5,7 +5,6 @@ import (
 	"strings"
 )
 
-
 // A Section represents a single section of an INI file.
 type section struct {
 	stringValues stringSection
@@ -88,7 +87,7 @@ func (s *section) SetInt(key string, value int) (ok bool) {
 
 func (s *section) SetBool(key string, value bool) (ok bool) {
 	var useVal string
-	if(value) {
+	if value {
 		useVal = "true"
 	} else {
 		useVal = "false"
@@ -98,11 +97,11 @@ func (s *section) SetBool(key string, value bool) (ok bool) {
 
 func (s *section) Remove(key string) {
 	_, found := s.stringValues[key]
-	if(found) {
+	if found {
 		delete(s.stringValues, key)
 	}
 	_, found = s.arrayValues[key]
-	if(found) {
+	if found {
 		delete(s.arrayValues, key)
 	}
 }

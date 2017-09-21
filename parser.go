@@ -1,9 +1,9 @@
 package ini
 
 import (
-	"strings"
 	"bufio"
 	"regexp"
+	"strings"
 )
 
 var (
@@ -17,7 +17,7 @@ func trimWithQuotes(inputVal string) (ret string) {
 	ret = strings.TrimSpace(inputVal)
 	groups := quotesRegex.FindStringSubmatch(ret)
 	if groups != nil {
-		if (groups[1] == groups[3]) {
+		if groups[1] == groups[3] {
 			ret = groups[2]
 		}
 	}
@@ -29,7 +29,7 @@ func parseFile(in *bufio.Scanner, file *file) (bytes int64, err error) {
 	lineNum := 0
 	bytes = -1
 	readLine := true
-	for readLine = in.Scan();readLine;readLine = in.Scan() {
+	for readLine = in.Scan(); readLine; readLine = in.Scan() {
 		line := in.Text()
 		bytes++
 		bytes += int64(len(line))
@@ -69,8 +69,8 @@ func parseFile(in *bufio.Scanner, file *file) (bytes int64, err error) {
 		}
 
 	}
-	if(bytes < 0) {
-		bytes =0
+	if bytes < 0 {
+		bytes = 0
 	}
 	err = in.Err()
 	return

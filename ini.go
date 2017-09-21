@@ -6,7 +6,6 @@ import (
 	"os"
 )
 
-
 // Newfile will create and initialise a File object
 func NewFile() File {
 	file := file{}
@@ -26,7 +25,7 @@ func Load(in io.Reader) (File, error) {
 func LoadFile(filename string) (file File, err error) {
 	file = nil
 	fh, err := os.Open(filename)
-	if(err != nil) {
+	if err != nil {
 		return
 	}
 	defer fh.Close()
@@ -34,7 +33,7 @@ func LoadFile(filename string) (file File, err error) {
 }
 
 // Create a file and populate with data from an existing ini.Reader
-func Copy(in Copier) (File) {
+func Copy(in Copier) File {
 	file := NewFile()
 	in.Copy(file)
 	return file

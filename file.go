@@ -5,9 +5,8 @@ import "io"
 // This implements the full ini.StreamReadWriter interface
 type file struct {
 	sections map[string]*section
-	reader io.Reader
+	reader   io.Reader
 }
-
 
 // Returns a named Section. A Section will be created if one does not already exist for the given name.
 func (f *file) section(name string) *section {
@@ -17,6 +16,25 @@ func (f *file) section(name string) *section {
 		f.sections[name] = theSection
 	}
 	return theSection
+}
+
+func (f *file) Sections() (value []string) {
+	value = make([]string, 0, len(f.sections))
+	for sect, _ := range f.sections {
+		value = append(value, sect)
+	}
+	return
+}
+
+func (f *file) Values(section string) (value map[string]string) {
+	value = make(map[string]string)
+	sect := f.section(section)
+	if sect != nil {
+		for k, v := range sect.stringValues {
+			value[k] = v
+		}
+	}
+	return
 }
 
 // Looks up a value for a key in a section and returns that value, along with a boolean result similar to a map lookup.
@@ -38,6 +56,7 @@ func (f *file) SetInt(section, key string, value int) (ok bool) {
 func (f *file) SetBool(section, key string, value bool) (ok bool) {
 	return f.section(section).SetBool(key, value)
 }
+
 // Set a key in a section to an array
 func (f *file) SetArr(section, key string, value []string) (ok bool) {
 	return f.section(section).SetArr(key, value)
@@ -48,7 +67,6 @@ func (f *file) SetArr(section, key string, value []string) (ok bool) {
 func (f *file) GetInt(section, key string) (value int, ok bool) {
 	return f.section(section).GetInt(key)
 }
-
 
 // Looks up a value for a key in a section and returns that value, along with a boolean result similar to a map lookup.
 // The `ok` boolean will be false in the event that the value could not be parsed as a bool
@@ -61,14 +79,13 @@ func (f *file) GetArr(section, key string) (value []string, ok bool) {
 	return f.section(section).GetArr(key)
 }
 
-func(f *file) Remove(section, key string) {
+func (f *file) Remove(section, key string) {
 	f.section(section).Remove(key)
 }
 
-
-func(f *file) RemoveSection(section string) {
+func (f *file) RemoveSection(section string) {
 	_, found := f.sections[section]
-	if(found) {
+	if found {
 		delete(f.sections, section)
 	}
 }

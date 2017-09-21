@@ -1,17 +1,15 @@
 package ini
 
 import (
-	"io"
 	"bufio"
+	"bytes"
+	"errors"
+	"fmt"
+	"io"
 	"os"
 	"sort"
-	"fmt"
 	"strings"
-	"errors"
-	"bytes"
 )
-
-
 
 // Loads INI data from a reader and stores the data in the File.
 func (f *file) ReadFrom(in io.Reader) (n int64, err error) {
@@ -32,7 +30,6 @@ func (f *file) LoadFile(file string) (err error) {
 	return
 }
 
-
 // Write out an INI File representing the current state to a writer.
 func (f *file) WriteTo(out io.Writer) (n int64, err error) {
 	orderedSections := make([]string, len(f.sections))
@@ -48,7 +45,7 @@ func (f *file) WriteTo(out io.Writer) (n int64, err error) {
 		options := f.sections[section]
 		thisWrite, err = fmt.Fprintln(out, "["+section+"]")
 		n += int64(thisWrite)
-		if(err) != nil {
+		if (err) != nil {
 			return
 		}
 		orderedStringKeys := make([]string, len(options.stringValues))
@@ -61,7 +58,7 @@ func (f *file) WriteTo(out io.Writer) (n int64, err error) {
 		for _, key := range orderedStringKeys {
 			thisWrite, err = fmt.Fprintln(out, key, "=", options.stringValues[key])
 			n += int64(thisWrite)
-			if(err) != nil {
+			if (err) != nil {
 				return
 			}
 		}
@@ -76,14 +73,14 @@ func (f *file) WriteTo(out io.Writer) (n int64, err error) {
 			for _, value := range options.arrayValues[key] {
 				thisWrite, err = fmt.Fprintln(out, key, "[]=", value)
 				n += int64(thisWrite)
-				if(err) != nil {
+				if (err) != nil {
 					return
 				}
 			}
 		}
 		thisWrite, err = fmt.Fprintln(out)
 		n += int64(thisWrite)
-		if(err) != nil {
+		if (err) != nil {
 			return
 		}
 	}
@@ -97,7 +94,7 @@ func (f *file) Write(p []byte) (n int, err error) {
 	var m int64 = 0
 	m, err = f.ReadFrom(reader)
 	n = int(m)
-	if(n != len(p) && err == nil) {
+	if n != len(p) && err == nil {
 		err = errors.New("Internal error: failed to write")
 	}
 	return
@@ -109,10 +106,10 @@ func (f *file) Write(p []byte) (n int, err error) {
 // Call close to start a new read from a freshly serialized file
 func (f *file) Read(p []byte) (n int, err error) {
 	n = 0
-	if(f.reader == nil) {
+	if f.reader == nil {
 		buf := new(bytes.Buffer)
 		_, err = f.WriteTo(buf)
-		if (err != nil) {
+		if err != nil {
 			return
 		}
 		f.reader = buf

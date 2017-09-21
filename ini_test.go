@@ -1,12 +1,12 @@
 package ini
 
 import (
+	"bytes"
 	"fmt"
 	"os"
 	"reflect"
 	"strings"
 	"testing"
-	"bytes"
 )
 
 func TestLoad(t *testing.T) {
@@ -58,7 +58,7 @@ func TestWriteExtra(t *testing.T) {
 	}
 
 	n, err := file.Write([]byte(src2))
-	if(n != expBytes) {
+	if n != expBytes {
 		t.Errorf("Expected to write %d bytes, got %d", expBytes, n)
 	}
 
@@ -90,10 +90,10 @@ func TestWriteExtraInvalid(t *testing.T) {
 	}
 
 	n, err := file.Write([]byte(src2))
-	if(n != expBytes) {
+	if n != expBytes {
 		t.Errorf("Expected to write %d bytes, got %d", expBytes, n)
 	}
-	if(err == nil) {
+	if err == nil {
 		t.Errorf("Expected an error on partial write, got none")
 	}
 
@@ -104,7 +104,6 @@ func TestWriteExtraInvalid(t *testing.T) {
 	check("foo", "hello", "world")
 	check("foo", "goodbye", "all")
 }
-
 
 func TestBoolFalse(t *testing.T) {
 	src := `
@@ -428,7 +427,6 @@ func TestWrite(t *testing.T) {
 	}
 }
 
-
 func TestRead(t *testing.T) {
 	testIni := NewFile()
 	testIni.Set("section1", "option1", "value1")
@@ -439,7 +437,7 @@ func TestRead(t *testing.T) {
 option1 = value1
 
 `
-	if(strVal != expected) {
+	if strVal != expected {
 		t.Errorf("Incorrect output from read; got: <<<%s<<< expected <<<%s<<<", strVal, expected)
 	}
 }
@@ -448,13 +446,13 @@ option1 = value1
 func TestIsReadWriter(t *testing.T) {
 	var testIni ReadWriter
 	testIni = NewFile()
-	testIni.Set("a","b","c")
+	testIni.Set("a", "b", "c")
 }
 
 func TestRemove(t *testing.T) {
 	testIni := NewFile()
-	testIni.Set("a","b","c")
-	testIni.Set("d","e","f")
+	testIni.Set("a", "b", "c")
+	testIni.Set("d", "e", "f")
 	buf := new(bytes.Buffer)
 	buf.ReadFrom(testIni)
 	strVal := buf.String()
@@ -467,7 +465,7 @@ e = f
 `
 	testIni.Close()
 	buf.Reset()
-	if(strVal != expected) {
+	if strVal != expected {
 		t.Errorf("Incorrect output from read; got: <<<%s<<< expected <<<%s<<<", strVal, expected)
 	}
 
@@ -482,7 +480,7 @@ b = c
 `
 	testIni.Close()
 	buf.Reset()
-	if(strVal != expected) {
+	if strVal != expected {
 		t.Errorf("Incorrect output from read; got: <<<%s<<< expected <<<%s<<<", strVal, expected)
 	}
 
@@ -495,19 +493,18 @@ b = c
 `
 	testIni.Close()
 	buf.Reset()
-	if(strVal != expected) {
+	if strVal != expected {
 		t.Errorf("Incorrect output from read; got: <<<%s<<< expected <<<%s<<<", strVal, expected)
 	}
-
 
 }
 
 func TestCopy(t *testing.T) {
 	testIni := NewFile()
-	testIni.Set("a","b","c")
-	testIni.Set("d","e","f")
+	testIni.Set("a", "b", "c")
+	testIni.Set("d", "e", "f")
 
-	doesEqual := func(ini Reader, sec, key, expected string) (bool) {
+	doesEqual := func(ini Reader, sec, key, expected string) bool {
 		act, _ := ini.Get(sec, key)
 		return (act == expected)
 	}
@@ -516,40 +513,40 @@ func TestCopy(t *testing.T) {
 		destIni := NewFile()
 		testIni.Copy(destIni)
 
-		if (!doesEqual(destIni,"a", "b", "c")) {
+		if !doesEqual(destIni, "a", "b", "c") {
 			t.Error("Expected copy to bring in data")
 		}
 	})
 	t.Run("ExtraData", func(t *testing.T) {
 		destIni := NewFile()
-		destIni.Set("a","c","e")
+		destIni.Set("a", "c", "e")
 		testIni.Copy(destIni)
 
-		if (!doesEqual(destIni,"a", "b", "c")) {
+		if !doesEqual(destIni, "a", "b", "c") {
 			t.Error("Expected copy to bring in data")
 		}
-		if (!doesEqual(destIni,"a", "c", "e")) {
+		if !doesEqual(destIni, "a", "c", "e") {
 			t.Error("Expected copy to leave data")
 		}
 	})
 	t.Run("ExtraSection", func(t *testing.T) {
 		destIni := NewFile()
-		destIni.Set("g","h","i")
+		destIni.Set("g", "h", "i")
 		testIni.Copy(destIni)
 
-		if (!doesEqual(destIni,"a", "b", "c")) {
+		if !doesEqual(destIni, "a", "b", "c") {
 			t.Error("Expected copy to bring in data")
 		}
-		if (!doesEqual(destIni,"g", "h", "i")) {
+		if !doesEqual(destIni, "g", "h", "i") {
 			t.Error("Expected copy to leave data")
 		}
 	})
 	t.Run("Overwrite", func(t *testing.T) {
 		destIni := NewFile()
-		destIni.Set("a","b","d")
+		destIni.Set("a", "b", "d")
 		testIni.Copy(destIni)
 
-		if (!doesEqual(destIni,"a", "b", "c")) {
+		if !doesEqual(destIni, "a", "b", "c") {
 			t.Error("Expected copy to bring in data")
 		}
 	})
