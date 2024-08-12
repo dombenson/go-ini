@@ -1,11 +1,74 @@
 package ini
 
-import "io"
+import (
+	"bytes"
+	"fmt"
+	"html/template"
+	"io"
+	"os"
+	"strings"
+)
 
 // This implements the full ini.StreamReadWriter interface
 type file struct {
 	sections map[string]*section
 	reader   io.Reader
+}
+
+func (f *file) ParseEnvironmentVariables() error {
+	environ := os.Environ()
+	environMap := make(map[string]string, len(environ))
+
+	for _, envvar := range environ {
+		pair := strings.SplitN(envvar, "=", 2)
+		environMap[pair[0]] = pair[1]
+	}
+
+	templateValues := struct {
+		Env map[string]string
+	}{
+		Env: environMap,
+	}
+
+	for sectionName, currentSection := range f.sections {
+		newStringSection := make(stringSection, len(currentSection.stringValues))
+		for k, v := range currentSection.stringValues {
+			tmpl, err := template.New(fmt.Sprintf("[%s]%s", sectionName, k)).Parse(v)
+			if err != nil {
+				return err
+			}
+
+			var res bytes.Buffer
+			err = tmpl.Execute(&res, templateValues)
+			if err != nil {
+				return err
+			}
+			newStringSection[k] = res.String()
+		}
+		f.sections[sectionName].stringValues = newStringSection
+
+		newArraySection := make(arraySection, len(currentSection.arrayValues))
+
+		for k, valueSlice := range currentSection.arrayValues {
+			newArraySection[k] = make([]string, len(valueSlice))
+			for i, v := range valueSlice {
+				tmpl, err := template.New(fmt.Sprintf("[%s][%d]%s", sectionName, i, k)).Parse(v)
+				if err != nil {
+					return err
+				}
+
+				var res bytes.Buffer
+				err = tmpl.Execute(&res, templateValues)
+				if err != nil {
+					return err
+				}
+				newArraySection[k][i] = res.String()
+			}
+		}
+		f.sections[sectionName].arrayValues = newArraySection
+	}
+
+	return nil
 }
 
 // Returns a named Section. A Section will be created if one does not already exist for the given name.

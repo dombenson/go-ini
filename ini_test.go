@@ -264,6 +264,18 @@ func checkStr(t *testing.T, file Reader, section, key, expect string) {
 	}
 }
 
+func checkInt(t *testing.T, file Reader, section, key string, expect int) {
+	if value, _ := file.GetInt(section, key); value != expect {
+		t.Errorf("GetInt(%q, %q): expected %q, got %q", section, key, expect, value)
+	}
+}
+
+func checkBool(t *testing.T, file Reader, section, key string, expect bool) {
+	if value, _ := file.GetBool(section, key); value != expect {
+		t.Errorf("GetBool(%q, %q): expected %v, got %v", section, key, expect, value)
+	}
+}
+
 func checkArr(t *testing.T, file Reader, section, key string, expect []string) {
 	value, ok := file.GetArr(section, key)
 	if !ok {
