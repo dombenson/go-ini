@@ -3,10 +3,10 @@ package ini
 import (
 	"bytes"
 	"fmt"
-	"html/template"
 	"io"
 	"os"
 	"strings"
+	"text/template"
 )
 
 // This implements the full ini.StreamReadWriter interface
