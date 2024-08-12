@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"log"
 	"os"
-	"strings"
 	"text/template"
 )
 
@@ -15,35 +15,11 @@ type file struct {
 	reader   io.Reader
 }
 
-func (f *file) ParseEnvironmentVariables() error {
-	environ := os.Environ()
-	environMap := make(map[string]string, len(environ))
-
-	for _, envvar := range environ {
-		pair := strings.SplitN(envvar, "=", 2)
-		environMap[pair[0]] = pair[1]
-	}
-
-	templateValues := struct {
-		Env map[string]string
-	}{
-		Env: environMap,
-	}
-
+func (f *file) ParseEnvironmentVariables() {
 	for sectionName, currentSection := range f.sections {
 		newStringSection := make(stringSection, len(currentSection.stringValues))
 		for k, v := range currentSection.stringValues {
-			tmpl, err := template.New(fmt.Sprintf("[%s]%s", sectionName, k)).Parse(v)
-			if err != nil {
-				return err
-			}
-
-			var res bytes.Buffer
-			err = tmpl.Execute(&res, templateValues)
-			if err != nil {
-				return err
-			}
-			newStringSection[k] = res.String()
+			newStringSection[k] = applyTemplateToValue(v, fmt.Sprintf("[%s]%s", sectionName, k))
 		}
 		f.sections[sectionName].stringValues = newStringSection
 
@@ -52,23 +28,36 @@ func (f *file) ParseEnvironmentVariables() error {
 		for k, valueSlice := range currentSection.arrayValues {
 			newArraySection[k] = make([]string, len(valueSlice))
 			for i, v := range valueSlice {
-				tmpl, err := template.New(fmt.Sprintf("[%s][%d]%s", sectionName, i, k)).Parse(v)
-				if err != nil {
-					return err
-				}
-
-				var res bytes.Buffer
-				err = tmpl.Execute(&res, templateValues)
-				if err != nil {
-					return err
-				}
-				newArraySection[k][i] = res.String()
+				newArraySection[k][i] = applyTemplateToValue(v, fmt.Sprintf("[%s]%s[%d]", sectionName, k, i))
 			}
 		}
 		f.sections[sectionName].arrayValues = newArraySection
 	}
+}
 
-	return nil
+func applyTemplateToValue(value string, identifier string) string {
+	tmpl, err := template.New(identifier).Funcs(template.FuncMap{
+		"Env": func(key string) string {
+			if envvar, ok := os.LookupEnv(key); ok {
+				return envvar
+			} else {
+				return fmt.Sprintf("{{ Env %q }}", key)
+			}
+		},
+	}).Parse(value)
+	if err != nil {
+		log.Printf("Could not compile Go template for %s: %s", identifier, err)
+		return value
+	}
+
+	var res bytes.Buffer
+	err = tmpl.Execute(&res, nil)
+	if err != nil {
+		log.Printf("Could not execute Go template for %s: %s", identifier, err)
+		return value
+	}
+
+	return res.String()
 }
 
 // Returns a named Section. A Section will be created if one does not already exist for the given name.

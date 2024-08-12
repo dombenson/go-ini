@@ -19,8 +19,8 @@ type Getter interface {
 	Values(section string) (value map[string]string)
 
 	// ParseEnvironmentVariables runs the ini file's values through Go Template with the environment variables available
-	// in the format '{{ .Env.ENV_VAR_NAME }}'.
-	ParseEnvironmentVariables() error
+	// in the format '{{ Env "ENV_VAR_NAME" }}'.
+	ParseEnvironmentVariables()
 }
 
 type Copier interface {
