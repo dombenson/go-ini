@@ -1,12 +1,7 @@
 package ini
 
 import (
-	"bytes"
-	"fmt"
 	"io"
-	"log"
-	"os"
-	"text/template"
 )
 
 // This implements the full ini.StreamReadWriter interface
@@ -15,51 +10,6 @@ type file struct {
 	reader                     io.Reader
 	environmentOverrideEnabled bool
 	environmentOverridePrefix  string
-}
-
-func (f *file) ParseEnvironmentVariables() {
-	for sectionName, currentSection := range f.sections {
-		newStringSection := make(stringSection, len(currentSection.stringValues))
-		for k, v := range currentSection.stringValues {
-			newStringSection[k] = applyTemplateToValue(v, fmt.Sprintf("[%s]%s", sectionName, k))
-		}
-		f.sections[sectionName].stringValues = newStringSection
-
-		newArraySection := make(arraySection, len(currentSection.arrayValues))
-
-		for k, valueSlice := range currentSection.arrayValues {
-			newArraySection[k] = make([]string, len(valueSlice))
-			for i, v := range valueSlice {
-				newArraySection[k][i] = applyTemplateToValue(v, fmt.Sprintf("[%s]%s[%d]", sectionName, k, i))
-			}
-		}
-		f.sections[sectionName].arrayValues = newArraySection
-	}
-}
-
-func applyTemplateToValue(value string, identifier string) string {
-	tmpl, err := template.New(identifier).Funcs(template.FuncMap{
-		"Env": func(key string) string {
-			if envvar, ok := os.LookupEnv(key); ok {
-				return envvar
-			} else {
-				return fmt.Sprintf("{{ Env %q }}", key)
-			}
-		},
-	}).Parse(value)
-	if err != nil {
-		log.Printf("Could not compile Go template for %s: %s", identifier, err)
-		return value
-	}
-
-	var res bytes.Buffer
-	err = tmpl.Execute(&res, nil)
-	if err != nil {
-		log.Printf("Could not execute Go template for %s: %s", identifier, err)
-		return value
-	}
-
-	return res.String()
 }
 
 func (f *file) EnableEnvironmentVariableOverrides(prefix string) {
