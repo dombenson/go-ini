@@ -6,42 +6,54 @@ import (
 	"testing"
 )
 
-func Test_file_ParseEnvironmentVariables(t *testing.T) {
+func Test_EnvironmentVariableOverrides_Enabled(t *testing.T) {
 	testIni := `
+global1 = wrong_global
+
 [test1]
-value1 = {{ Env "GO_INI_TEST_ONE" }}
-value2 = "{{ Env "GO_INI_TEST_TWO" }}"
-value3[] = {{ Env "GO_INI_TEST_THREE_ONE" }}
-value3[] = {{ Env "GO_INI_TEST_THREE_TWO" }}
-value3[] = "{{ Env "GO_INI_TEST_RUNTIME_ENV_VAR" }}"
-value4 = "{{ Env "GO_INI_TEST_RUNTIME_ENV_VAR" }}"
+value1 = wrong1
+value2 = wrong2
+value3[] = wrong3_1
+value3[] = wrong3_2
+value3[] = wrong3_3
+value4[] = wrong4_1
+value4[] = wrong4_2
+value4[] = wrong4_3
 
 [test2]
-valueInt = {{ Env "GO_INI_TEST_INT" }}
-valueBool = {{ Env "GO_INI_TEST_BOOL" }}
+value_int = -1
+value_bool = false
 `
 
-	err := os.Setenv("GO_INI_TEST_ONE", "ONE")
+	err := os.Setenv("GO_INI_GLOBAL1", "correct_global")
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = os.Setenv("GO_INI_TEST_TWO", "TWO")
+	err = os.Setenv("GO_INI_TEST1_VALUE1", "correct1")
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = os.Setenv("GO_INI_TEST_THREE_ONE", "THREE_ONE")
+	err = os.Setenv("GO_INI_TEST1_VALUE2", "correct2")
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = os.Setenv("GO_INI_TEST_THREE_TWO", "THREE_TWO")
+	err = os.Setenv("GO_INI_TEST1_VALUE3_1", "correct3_1")
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = os.Setenv("GO_INI_TEST_INT", "42")
+	err = os.Setenv("GO_INI_TEST1_VALUE3_2", "correct3_2")
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = os.Setenv("GO_INI_TEST_BOOL", "true")
+	err = os.Setenv("GO_INI_TEST1_VALUE4", "[]")
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = os.Setenv("GO_INI_TEST2_VALUE_INT", "42")
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = os.Setenv("GO_INI_TEST2_VALUE_BOOL", "true")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -51,17 +63,81 @@ valueBool = {{ Env "GO_INI_TEST_BOOL" }}
 		t.Fatal(err)
 	}
 
-	file.ParseEnvironmentVariables()
+	file.EnableEnvironmentVariableOverrides("GO_INI")
 
-	checkStr(t, file, "test1", "value1", "ONE")
-	checkStr(t, file, "test1", "value2", "TWO")
-	checkArr(t, file, "test1", "value3", []string{"THREE_ONE", "THREE_TWO", "{{ Env \"GO_INI_TEST_RUNTIME_ENV_VAR\" }}"})
+	checkStr(t, file, "", "global1", "correct_global")
+	checkStr(t, file, "test1", "value1", "correct1")
+	checkStr(t, file, "test1", "value2", "correct2")
+	checkArr(t, file, "test1", "value3", []string{"correct3_1", "correct3_2"})
+	checkArr(t, file, "test1", "value4", []string{})
 
-	// Test is validating that we can use a Go template value as a variable to support the use-case where we parse
-	// the ini file once when building with additional values added at runtime. This variable isn't in the environment,
-	// so should pass through unmodified.
-	checkStr(t, file, "test1", "value4", "{{ Env \"GO_INI_TEST_RUNTIME_ENV_VAR\" }}")
+	checkInt(t, file, "test2", "value_int", 42)
+	checkBool(t, file, "test2", "value_bool", true)
+}
 
-	checkInt(t, file, "test2", "valueInt", 42)
-	checkBool(t, file, "test2", "valueBool", true)
+func Test_EnvironmentVariableOverrides_Disabled(t *testing.T) {
+	testIni := `
+global1 = correct_global
+
+[test1]
+value1 = correct1
+value2 = correct2
+value3[] = correct3_1
+value3[] = correct3_2
+value3[] = correct3_3
+value4[] = correct4_1
+value4[] = correct4_2
+value4[] = correct4_3
+
+[test2]
+value_int = 42
+value_bool = true
+`
+
+	err := os.Setenv("GO_INI_GLOBAL1", "wrong_global")
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = os.Setenv("GO_INI_TEST1_VALUE1", "wrong1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = os.Setenv("GO_INI_TEST1_VALUE2", "wrong2")
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = os.Setenv("GO_INI_TEST1_VALUE3_1", "wrong3_1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = os.Setenv("GO_INI_TEST1_VALUE3_2", "wrong3_2")
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = os.Setenv("GO_INI_TEST1_VALUE4", "[]")
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = os.Setenv("GO_INI_TEST2_VALUE_INT", "-1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = os.Setenv("GO_INI_TEST2_VALUE_BOOL", "false")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	file, err := Load(strings.NewReader(testIni))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	checkStr(t, file, "", "global1", "correct_global")
+	checkStr(t, file, "test1", "value1", "correct1")
+	checkStr(t, file, "test1", "value2", "correct2")
+	checkArr(t, file, "test1", "value3", []string{"correct3_1", "correct3_2", "correct3_3"})
+	checkArr(t, file, "test1", "value4", []string{"correct4_1", "correct4_2", "correct4_3"})
+
+	checkInt(t, file, "test2", "value_int", 42)
+	checkBool(t, file, "test2", "value_bool", true)
 }

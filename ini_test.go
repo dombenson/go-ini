@@ -383,17 +383,19 @@ func TestDefinedSectionBehaviour(t *testing.T) {
 		check("foo=bar", testFile, t)
 	})
 	t.Run("emptySection", func(t *testing.T) {
+		expectedFile := &file{sections: map[string]*section{}}
+		expectedFile.sections["a"] = expectedFile.makeSection("a", stringSection{})
+		expectedFile.sections["b"] = expectedFile.makeSection("b", stringSection{"foo": "bar"})
+
 		// User-defined sections should always be present, even if empty
-		check("[a]\n[b]\nfoo=bar", &file{sections: map[string]*section{
-			"a": makeSection(stringSection{}),
-			"b": makeSection(stringSection{"foo": "bar"}),
-		}}, t)
+		check("[a]\n[b]\nfoo=bar", expectedFile, t)
 	})
 	t.Run("mixedGlobalSection", func(t *testing.T) {
-		check("foo=bar\n[a]\nthis=that", &file{sections: map[string]*section{
-			"":  makeSection(stringSection{"foo": "bar"}),
-			"a": makeSection(stringSection{"this": "that"}),
-		}}, t)
+		expectedFile := &file{sections: map[string]*section{}}
+		expectedFile.sections[""] = expectedFile.makeSection("", stringSection{"foo": "bar"})
+		expectedFile.sections["a"] = expectedFile.makeSection("a", stringSection{"this": "that"})
+
+		check("foo=bar\n[a]\nthis=that", expectedFile, t)
 	})
 }
 
