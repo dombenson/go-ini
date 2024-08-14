@@ -1,18 +1,36 @@
 package ini
 
-import "io"
+import (
+	"io"
+)
 
 // This implements the full ini.StreamReadWriter interface
 type file struct {
-	sections map[string]*section
-	reader   io.Reader
+	sections                   map[string]*section
+	reader                     io.Reader
+	environmentOverrideEnabled bool
+	environmentOverridePrefix  string
+}
+
+func (f *file) EnableEnvironmentVariableOverrides(prefix string) {
+	f.environmentOverrideEnabled = true
+	f.environmentOverridePrefix = prefix
+}
+
+func (f *file) DisableEnvironmentVariableOverrides() {
+	f.environmentOverrideEnabled = false
 }
 
 // Returns a named Section. A Section will be created if one does not already exist for the given name.
 func (f *file) section(name string) *section {
 	theSection := f.sections[name]
 	if theSection == nil {
-		theSection = &section{stringValues: make(map[string]string), arrayValues: make(map[string][]string)}
+		theSection = &section{
+			file:         f,
+			name:         name,
+			stringValues: make(map[string]string),
+			arrayValues:  make(map[string][]string),
+		}
 		f.sections[name] = theSection
 	}
 	return theSection

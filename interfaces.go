@@ -17,6 +17,14 @@ type Getter interface {
 	Sections() (value []string)
 	// Lists the values in a section the file
 	Values(section string) (value map[string]string)
+
+	// EnableEnvironmentVariableOverrides enables support for overriding files with values from the environment.
+	// For example, an environment variable called SERVICE_DB_HOST would override the 'host' value in the 'db' section
+	// if the prefix is supplied as 'SERVICE'. Array values require either a numeric suffix to override the value
+	// (e.g. PREFIX_SECTION_VALUE_1=hello, PREFIX_SECTION_VALUE_2=world to override [section]value with []string{"hello", "world"}),
+	// or the literal value '[]' to unset (e.g. PREFIX_SECTION_VALUE=[] can be used to unset [section]value).
+	EnableEnvironmentVariableOverrides(prefix string)
+	DisableEnvironmentVariableOverrides()
 }
 
 type Copier interface {
